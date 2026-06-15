@@ -10,4 +10,10 @@ void displayInit() {
   tft.setBrightness(255);
   tft.setTextWrap(false);
   displayFontInit();
+
+  #ifdef HAS_BACKLIGHT_PIN
+    // Initialize backlight for Waveshare board
+    pinMode(config::kDisplayPinBl, OUTPUT);
+    digitalWrite(config::kDisplayPinBl, HIGH);  // Turn on backlight
+    #endif
 }

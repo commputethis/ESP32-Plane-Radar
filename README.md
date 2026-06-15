@@ -1,6 +1,6 @@
 # Plane Radar
 
-<img width="800" height="450" alt="plane-radar" src="https://github.com/user-attachments/assets/716d0992-dab8-47ba-8f1a-2aec7f607419" />
+![plane-radar](https://github.com/user-attachments/assets/716d0992-dab8-47ba-8f1a-2aec7f607419)
 
 **3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) · **Firmware:** [Releases](https://github.com/commputethis/ESP32-Plane-Radar/releases)
 
@@ -15,22 +15,22 @@ After Wi‑Fi is saved, the device reconnects automatically; the radar runs in t
 
 ## Supported Boards
 
-| Board | Display | SPI Pins | Notes |
-|-------|---------|----------|-------|
-| **ESP32-C3 Super Mini** | GC9A01 round 1.28" | GPIO 2/3/4 | USB-C native (CDC), original design |
-| **Waveshare ESP32-S3 LCD 1.28"** | GC9A01 1.28" | GPIO 35/36/8 | UART serial, non-touch variant |
+| Board | Display | Notes |
+| ------- | --------- | ------- |
+| **ESP32-C3 Super Mini** | GC9A01 round 1.28" (external) | USB-C native (CDC), original design |
+| **Waveshare ESP32-S3 LCD 1.28"** | GC9A01 1.28" (onboard) | UART serial, integrated display |
 
-Both environments use the same codebase with conditional compilation (`include/lgfx_config.hpp`).
+Both environments use the same codebase with conditional compilation (`include/config.h`).
 
 ## Controls (BOOT pin, active LOW)
 
 | Board | BOOT Pin |
-|-------|----------|
+| ------- | ---------- |
 | ESP32-C3 Super Mini | GPIO 9 |
-| Waveshare ESP32-S3 | GPIO 0 (typical) |
+| Waveshare ESP32-S3 | GPIO 0 |
 
 | Action | Effect |
-|--------|--------|
+| -------- | -------- |
 | **Short tap** | Cycle range preset (5 → 10 → 15 → 25 km); saved to flash |
 | **Hold 3 s** | Clear Wi‑Fi, location, and units; reboot into setup portal |
 
@@ -54,7 +54,7 @@ The same portal runs on the setup AP and on the device's LAN IP while connected 
 **Custom fields** (stored in NVS):
 
 | Field | Purpose |
-|-------|---------|
+| ------- | --------- |
 | **Latitude / Longitude** | Radar center and ADS-B query position (defaults in `config.h` until set) |
 | **Display distances in miles** | Ring scale label in **mi** instead of **km** (e.g. `6mi` vs `10km`) |
 | **Show airport runways** | Major-airport runway overlay on the radar (off to hide) |
@@ -74,7 +74,7 @@ Layout and colors: `include/ui/radar_theme.h`.
 ### Range presets
 
 | Ring 3 label | Outer radius (aircraft scale) |
-|------------|-------------------------------|
+| ------------ | ------------------------------- |
 | 5 km / 3 mi | ~6.7 km |
 | 10 km / 6 mi | ~13.3 km (default) |
 | 15 km / 9 mi | ~20 km |
@@ -105,14 +105,15 @@ As range decreases (or aircraft approach), targets move inward; beyond-ring dots
 
 ## Configuration
 
-Edit **`include/config.h`** for hardware and behavior:
+Edit **`include/config.h`** for hardware and behavior. The file uses conditional compilation to support both boards automatically:
 
 | Area | Keys / notes |
-|------|----------------|
+| ------ | -------------- |
 | Portal | `kPortalApName`, `kPortalIp`, `kPortalHostname` / `kPortalHostUrl` (mDNS; needs `-DWM_MDNS` in `platformio.ini`) |
 | Wi‑Fi timing | connect attempts, reconnect grace, portal timeout (`0` = no timeout) |
 | BOOT | `kBootPin`, `kBootResetHoldMs`, `kBootTapMinMs` |
-| Display SPI | pins, `kDisplayInvert`, `kDisplayRgbOrder`, `kDisplaySpiWriteHz` |
+| Display SPI | pins auto-selected per board, `kDisplayInvert`, `kDisplayRgbOrder`, `kDisplaySpiWriteHz` |
+| Backlight | `kDisplayPinBl` (Waveshare only, GPIO 40) |
 | Default location | `kDefaultRadarLat`, `kDefaultRadarLon` (until portal overrides) |
 | ADS-B | `kAdsbFetchIntervalMs`, `kAdsbShowGroundAircraft` |
 
@@ -120,7 +121,7 @@ Range presets: `include/ui/radar_range.h` (`kRangePresets`).
 
 ## Project layout
 
-```
+```txt
 include/
   config.h
   hardware/
@@ -154,10 +155,10 @@ src/
 
 ## Wiring
 
-### ESP32-C3 Super Mini + GC9A01
+### ESP32-C3 Super Mini + External GC9A01
 
 | Display | ESP32-C3 |
-|---------|----------|
+| --------- | ---------- |
 | VCC | 3V3 |
 | GND | GND |
 | RST | GPIO **0** |
@@ -169,19 +170,26 @@ src/
 
 ### Waveshare ESP32-S3 LCD 1.28"
 
-Integrated directly on the board; SPI and control pins are routed internally.
+The display is integrated on the board. Pins are routed internally:
 
-| Signal | GPIO |
-|--------|------|
-| CLK | **36** |
-| DIN (MOSI) | **35** |
-| CS | **8** |
-| RST | **4** |
-| BL (backlight, optional PWM) | **3** |
+| Signal | GPIO | Function |
+| -------- | ------ | ---------- |
+| LCD_CLK | **10** | SPI Clock |
+| LCD_DIN (MOSI) | **11** | SPI Data In |
+| LCD_CS | **9** | Chip Select |
+| LCD_DC | **8** | Data/Command |
+| LCD_RST | **12** | Reset |
+| LCD_BL | **40** | Backlight (PWM capable) |
+| BOOT | **0** | Boot/Reset button |
 
-For the BOOT button, use GPIO **0** (standard reset/boot strapping pin).
+**Note:** The Waveshare board includes an onboard IMU ( QMI8658C ) on I2C (GPIO 6/7), but this firmware does not use it.
 
 ## Build
+
+### Prerequisites
+
+- [PlatformIO](https://platformio.org/) installed
+- USB-C cable for programming
 
 ### For ESP32-C3 Super Mini (original)
 
@@ -204,6 +212,16 @@ pio device monitor
 - PlatformIO env: **`waveshare-s3`**
 - Serial: **115200** baud (UART only)
 - Upload via USB-C using standard ESP32-S3 bootloader
+- **Important:** The backlight is controlled by GPIO 40 and is automatically initialized by the firmware
+
+### Entering Download Mode (if needed)
+
+If automatic upload fails, manually enter download mode:
+
+1. Hold **BOOT** button (GPIO 0)
+2. Press and release **RESET** (or unplug/replug USB)
+3. Release **BOOT** button
+4. Upload firmware
 
 ### Web-flashable release image
 
@@ -232,7 +250,7 @@ Put the board in download mode (hold **BOOT**, tap **RESET**), then flash with C
 ### CI and releases (GitHub Actions)
 
 | Workflow | When | Output |
-|----------|------|--------|
+| ---------- | ------ | -------- |
 | [Build](.github/workflows/build.yml) | Push / PR to `main` | Artifacts for both `supermini` and `waveshare-s3` (~90 days) |
 | [Release](.github/workflows/release.yml) | Git tag `v*` (e.g. `v1.0.0`) | GitHub Release assets (both environments) |
 
@@ -245,8 +263,28 @@ git push origin v1.0.0
 
 The release workflow builds firmware in CI for all environments and attaches merged images to the release.
 
+## Troubleshooting
+
+### Blank screen on Waveshare board
+
+If the serial monitor shows the code is running but the display is blank:
+
+1. **Check build environment** — Make sure you used `pio run -e waveshare-s3`, not `supermini`
+2. **Backlight** — The backlight (GPIO 40) is automatically controlled by the firmware. If you've modified the code, ensure `pinMode(40, OUTPUT)` and `digitalWrite(40, HIGH)` are called during display initialization.
+3. **Pin conflicts** — GPIO 9 is used for LCD_CS on the Waveshare board, not the BOOT button (which is GPIO 0).
+
+### Wi-Fi connection issues
+
+- The device will create `PlaneRadar-Setup` AP if no valid Wi-Fi credentials are stored
+- Hold BOOT for 3+ seconds to clear credentials and restart setup
+- Check serial monitor (115200 baud) for connection status and IP address
+
 ## Dependencies
 
 - [LovyanGFX](https://github.com/lovyan03/LovyanGFX)
 - [WiFiManager](https://github.com/tzapu/WiFiManager)
 - [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+
+## License
+
+MIT License — see [LICENSE](LICENSE)
