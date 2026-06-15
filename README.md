@@ -4,7 +4,7 @@
 
 **3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) · **Firmware:** [Releases](https://github.com/commputethis/ESP32-Plane-Radar/releases)
 
-Firmware for a **1.28″ round GC9A01** display (240×240) on **ESP32-C3 Super Mini** or **Waveshare ESP32-S3 LCD 1.28"**. Shows a circular **ADS-B radar** around your configured location, with **WiFiManager** for first-time setup.
+Firmware for a **1.28″ round GC9A01** display (240×240) on **ESP32-C3 Super Mini**, **Waveshare ESP32-S3 LCD 1.28"**, or **Waveshare ESP32-S3 Touch LCD 1.28"**. Shows a circular **ADS-B radar** around your configured location, with **WiFiManager** for first-time setup.
 
 ## What it does
 
@@ -19,6 +19,7 @@ After Wi‑Fi is saved, the device reconnects automatically; the radar runs in t
 | ------- | --------- | ------- |
 | **ESP32-C3 Super Mini** | GC9A01 round 1.28" (external) | USB-C native (CDC), original design |
 | **Waveshare ESP32-S3 LCD 1.28"** | GC9A01 1.28" (onboard) | UART serial, integrated display |
+| **Waveshare ESP32-S3 Touch LCD 1.28"** | GC9A01A 1.28" (onboard) + CST816S | UART serial, integrated display |
 
 Both environments use the same codebase with conditional compilation (`include/config.h`).
 
@@ -28,6 +29,7 @@ Both environments use the same codebase with conditional compilation (`include/c
 | ------- | ---------- |
 | ESP32-C3 Super Mini | GPIO 9 |
 | Waveshare ESP32-S3 | GPIO 0 |
+| Waveshare ESP32-S3-Touch | GPIO 0 |
 
 | Action | Effect |
 | -------- | -------- |
@@ -122,12 +124,16 @@ Range presets: `include/ui/radar_range.h` (`kRangePresets`).
 ## Project layout
 
 ```txt
+data/
+  ui_font.vlw                — embedded smooth UI font (Noto Sans Bold)
 include/
   config.h
+  lgfx_config.hpp
   hardware/
     lgfx_config.hpp          — conditional SPI/panel config per board
     display.h
     display_font.h
+    touch.h
   data/
     large_airports.h
   ui/
@@ -140,17 +146,29 @@ include/
     wifi_setup.h
     radar_location.h
     adsb_client.h
-data/
-  ui_font.vlw                — embedded smooth UI font (Noto Sans Bold)
+partitions
+  plane_radar.csv
 scripts/
   build_large_airports.py
+  merge_firmware.py
+  merge-firmware.sh
 src/
   main.cpp
   data/
     large_airports_data.cpp
   hardware/
-  ui/
+    display_font.cpp
+    display.cpp
+    touch.cpp
   services/
+    adsb_client.cpp
+    radar_location.cpp
+    wifi_setup.cpp
+  ui/
+    radar_display.cpp
+    radar_range.cpp
+    runway_overlay.cpp
+    status_screens.cpp
 ```
 
 ## Wiring

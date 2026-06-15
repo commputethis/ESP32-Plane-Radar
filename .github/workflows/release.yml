@@ -15,12 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [supermini, waveshare-s3]
+        environment: [supermini, waveshare-s3, waveshare-s3-touch]
         include:
           - environment: supermini
             suffix: esp32c3-supermini
           - environment: waveshare-s3
             suffix: waveshare-s3
+          - environment: waveshare-s3-touch
+            suffix: waveshare-s3-touch
     steps:
       - name: Checkout
         uses: actions/checkout@v4
