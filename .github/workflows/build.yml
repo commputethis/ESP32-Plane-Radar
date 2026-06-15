@@ -14,6 +14,9 @@ concurrency:
 jobs:
   firmware:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [supermini, waveshare-s3]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,19 +43,19 @@ jobs:
       - name: Check airport data
         run: python3 scripts/build_large_airports.py --check
 
-      - name: Build
-        run: pio run -e supermini
+      - name: Build ${{ matrix.environment }}
+        run: pio run -e ${{ matrix.environment }}
 
       - name: Merge web-flash image
-        run: pio run -t merge -e supermini
+        run: pio run -t merge -e ${{ matrix.environment }}
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: plane-radar-supermini
+          name: plane-radar-${{ matrix.environment }}
           if-no-files-found: error
           path: |
-            .pio/build/supermini/firmware-merged.bin
-            .pio/build/supermini/firmware.bin
-            .pio/build/supermini/bootloader.bin
-            .pio/build/supermini/partitions.bin
+            .pio/build/${{ matrix.environment }}/firmware-merged.bin
+            .pio/build/${{ matrix.environment }}/firmware.bin
+            .pio/build/${{ matrix.environment }}/bootloader.bin
+            .pio/build/${{ matrix.environment }}/partitions.bin

@@ -13,6 +13,14 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [supermini, waveshare-s3]
+        include:
+          - environment: supermini
+            suffix: esp32c3-supermini
+          - environment: waveshare-s3
+            suffix: waveshare-s3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,10 +47,10 @@ jobs:
       - name: Check airport data
         run: python3 scripts/build_large_airports.py --check
 
-      - name: Build and merge
+      - name: Build and merge ${{ matrix.environment }}
         run: |
-          pio run -e supermini
-          pio run -t merge -e supermini
+          pio run -e ${{ matrix.environment }}
+          pio run -t merge -e ${{ matrix.environment }}
 
       - name: Package release files
         run: |
@@ -51,14 +59,38 @@ jobs:
             VERSION="manual-${GITHUB_SHA::7}"
           fi
           mkdir -p dist
-          cp .pio/build/supermini/firmware-merged.bin "dist/plane-radar-${VERSION}.bin"
-          sha256sum "dist/plane-radar-${VERSION}.bin" > "dist/plane-radar-${VERSION}.bin.sha256"
-          echo "version=${VERSION}" >> "$GITHUB_ENV"
+          cp .pio/build/${{ matrix.environment }}/firmware-merged.bin "dist/plane-radar-${VERSION}-${{ matrix.suffix }}.bin"
+          sha256sum "dist/plane-radar-${VERSION}-${{ matrix.suffix }}.bin" > "dist/plane-radar-${VERSION}-${{ matrix.suffix }}.bin.sha256"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.environment }}
+          path: dist/*
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: release-*
+
+      - name: Flatten directory structure
+        run: |
+          mkdir -p final
+          find dist -name "*.bin" -exec cp {} final/ \;
+          find dist -name "*.sha256" -exec cp {} final/ \;
+          ls -la final/
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: final/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
