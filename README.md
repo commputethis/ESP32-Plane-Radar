@@ -2,9 +2,9 @@
 
 <img width="800" height="450" alt="plane-radar" src="https://github.com/user-attachments/assets/716d0992-dab8-47ba-8f1a-2aec7f607419" />
 
-**3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) · **Firmware:** [Releases](https://github.com/MatixYo/ESP32-Plane-Radar/releases)
+**3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) · **Firmware:** [Releases](https://github.com/commputethis/ESP32-Plane-Radar/releases)
 
-Firmware for an **ESP32-C3 Super Mini** and a **1.28″ round GC9A01** display (240×240). Shows a circular **ADS-B radar** around your configured location, with **WiFiManager** for first-time setup.
+Firmware for a **1.28″ round GC9A01** display (240×240) on **ESP32-C3 Super Mini** or **Waveshare ESP32-S3 LCD 1.28"**. Shows a circular **ADS-B radar** around your configured location, with **WiFiManager** for first-time setup.
 
 ## What it does
 
@@ -13,7 +13,21 @@ Firmware for an **ESP32-C3 Super Mini** and a **1.28″ round GC9A01** display (
 
 After Wi‑Fi is saved, the device reconnects automatically; the radar runs in the main loop with periodic ADS-B updates (~5 s).
 
-## Controls (BOOT, GPIO 9, active LOW)
+## Supported Boards
+
+| Board | Display | SPI Pins | Notes |
+|-------|---------|----------|-------|
+| **ESP32-C3 Super Mini** | GC9A01 round 1.28" | GPIO 2/3/4 | USB-C native (CDC), original design |
+| **Waveshare ESP32-S3 LCD 1.28"** | GC9A01 1.28" | GPIO 35/36/8 | UART serial, non-touch variant |
+
+Both environments use the same codebase with conditional compilation (`include/lgfx_config.hpp`).
+
+## Controls (BOOT pin, active LOW)
+
+| Board | BOOT Pin |
+|-------|----------|
+| ESP32-C3 Super Mini | GPIO 9 |
+| Waveshare ESP32-S3 | GPIO 0 (typical) |
 
 | Action | Effect |
 |--------|--------|
@@ -35,7 +49,7 @@ During setup you can also hold BOOT at power-on to force a credential reset (sam
 1. Open **`http://plane-radar.local`** or **`http://<device-ip>`** (e.g. from your router or serial log at boot)
 2. Change Wi‑Fi, location, units, or runway overlay; save
 
-The same portal runs on the setup AP and on the device’s LAN IP while connected to Wi‑Fi. mDNS hostname is `plane-radar` → **plane-radar.local** (`kPortalHostname` in `config.h`). Some clients resolve `.local` slowly; use the IP if needed.
+The same portal runs on the setup AP and on the device's LAN IP while connected to Wi‑Fi. mDNS hostname is `plane-radar` → **plane-radar.local** (`kPortalHostname` in `config.h`).
 
 **Custom fields** (stored in NVS):
 
@@ -45,7 +59,7 @@ The same portal runs on the setup AP and on the device’s LAN IP while connecte
 | **Display distances in miles** | Ring scale label in **mi** instead of **km** (e.g. `6mi` vs `10km`) |
 | **Show airport runways** | Major-airport runway overlay on the radar (off to hide) |
 
-After a reset, the device reboots and shows the setup screen immediately (no “Connecting” loop on stale credentials).
+After a reset, the device reboots and shows the setup screen immediately (no "Connecting" loop on stale credentials).
 
 ## Radar display
 
@@ -110,7 +124,7 @@ Range presets: `include/ui/radar_range.h` (`kRangePresets`).
 include/
   config.h
   hardware/
-    lgfx_config.hpp
+    lgfx_config.hpp          — conditional SPI/panel config per board
     display.h
     display_font.h
   data/
@@ -126,7 +140,7 @@ include/
     radar_location.h
     adsb_client.h
 data/
-  ui_font.vlw              — embedded smooth UI font (Noto Sans Bold)
+  ui_font.vlw                — embedded smooth UI font (Noto Sans Bold)
 scripts/
   build_large_airports.py
 src/
@@ -138,7 +152,9 @@ src/
   services/
 ```
 
-## Wiring (GC9A01 ↔ ESP32-C3 Super Mini)
+## Wiring
+
+### ESP32-C3 Super Mini + GC9A01
 
 | Display | ESP32-C3 |
 |---------|----------|
@@ -151,33 +167,60 @@ src/
 | SCL (SCLK) | GPIO **4** |
 | BOOT (user) | GPIO **9** |
 
+### Waveshare ESP32-S3 LCD 1.28"
+
+Integrated directly on the board; SPI and control pins are routed internally.
+
+| Signal | GPIO |
+|--------|------|
+| CLK | **36** |
+| DIN (MOSI) | **35** |
+| CS | **8** |
+| RST | **4** |
+| BL (backlight, optional PWM) | **3** |
+
+For the BOOT button, use GPIO **0** (standard reset/boot strapping pin).
+
 ## Build
 
+### For ESP32-C3 Super Mini (original)
+
 ```bash
-pio run -t upload
+pio run -e supermini -t upload
 pio device monitor
 ```
 
 - PlatformIO env: **`supermini`**
-- Serial: **115200** baud
-- USB CDC on boot enabled in `platformio.ini` for the Super Mini
+- Serial: **115200** baud (USB-C CDC)
+- USB CDC on boot enabled in `platformio.ini`
+
+### For Waveshare ESP32-S3 LCD 1.28"
+
+```bash
+pio run -e waveshare-s3 -t upload
+pio device monitor
+```
+
+- PlatformIO env: **`waveshare-s3`**
+- Serial: **115200** baud (UART only)
+- Upload via USB-C using standard ESP32-S3 bootloader
 
 ### Web-flashable release image
 
-Single `.bin` for [esptool-js](https://espressif.github.io/esptool-js/) and similar tools (ESP32-C3, 4 MB, flash at **0x0**):
+Single `.bin` for [esptool-js](https://espressif.github.io/esptool-js/) and similar tools:
 
 ```bash
 chmod +x scripts/merge-firmware.sh   # once
 ./scripts/merge-firmware.sh
 ```
 
-Writes `release/plane-radar-merged.bin`. Skip rebuild if firmware is already built:
+Writes `release/plane-radar-merged.bin` for the default (`supermini`) environment. To build for Waveshare:
 
 ```bash
-./scripts/merge-firmware.sh --no-build
+./scripts/merge-firmware.sh waveshare-s3
 ```
 
-Or via PlatformIO only (output: `.pio/build/supermini/firmware-merged.bin`):
+Or via PlatformIO only:
 
 ```bash
 pio run -e supermini
@@ -190,8 +233,8 @@ Put the board in download mode (hold **BOOT**, tap **RESET**), then flash with C
 
 | Workflow | When | Output |
 |----------|------|--------|
-| [Build](.github/workflows/build.yml) | Push / PR to `main` | Artifact `plane-radar-supermini` (merged + split `.bin` files, ~90 days) |
-| [Release](.github/workflows/release.yml) | Git tag `v*` (e.g. `v1.0.0`) | GitHub Release asset `plane-radar-v1.0.0.bin` + `.sha256` |
+| [Build](.github/workflows/build.yml) | Push / PR to `main` | Artifacts for both `supermini` and `waveshare-s3` (~90 days) |
+| [Release](.github/workflows/release.yml) | Git tag `v*` (e.g. `v1.0.0`) | GitHub Release assets (both environments) |
 
 To ship a version users can download:
 
@@ -200,7 +243,7 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-The release workflow builds firmware in CI and attaches the merged image to the release. Download from **Releases** on GitHub, then flash at **0x0** (ESP32-C3, 4 MB).
+The release workflow builds firmware in CI for all environments and attaches merged images to the release.
 
 ## Dependencies
 
