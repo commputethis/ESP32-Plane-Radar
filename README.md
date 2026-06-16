@@ -2,9 +2,9 @@
 
 ![plane-radar](https://github.com/user-attachments/assets/716d0992-dab8-47ba-8f1a-2aec7f607419)
 
-**3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) · **Firmware:** [Releases](https://github.com/commputethis/ESP32-Plane-Radar/releases)
+ · **Firmware:** [Releases](https://github.com/commputethis/ESP32-Plane-Radar/releases)
 
-Firmware for a **1.28″ round GC9A01** display (240×240) on **ESP32-C3 Super Mini**, **Waveshare ESP32-S3 LCD 1.28"**, or **Waveshare ESP32-S3 Touch LCD 1.28"**. Shows a circular **ADS-B radar** around your configured location, with **WiFiManager** for first-time setup.
+Firmware for an **ESP32-C3** or **ESP32-S3** and a **1.28" round display**(GC9A01 240X240px). Shows a circular **ADS-B radar** around your configured location, with **WiFiManager** for first-time setup.
 
 ## What it does
 
@@ -17,11 +17,12 @@ After Wi‑Fi is saved, the device reconnects automatically; the radar runs in t
 
 | Board | Display | Notes |
 | ------- | --------- | ------- |
-| **ESP32-C3 Super Mini** | GC9A01 round 1.28" (external) | USB-C native (CDC), original design |
-| **Waveshare ESP32-S3 LCD 1.28"** | GC9A01 1.28" (onboard) | UART serial, integrated display |
-| **Waveshare ESP32-S3 Touch LCD 1.28"** | GC9A01A 1.28" (onboard) + CST816S | UART serial, integrated display |
+| **ESP32-C3 Super Mini** | GC9A01 round 1.28" (external) | **3D printed case (STL + assembly):** [MakerWorld](https://makerworld.com/en/models/2872376-esp32-plane-radar-live-ads-b-on-a-round-display#profileId-3207083) |
+| **Waveshare ESP32-S3 LCD 1.28"** | GC9A01 round 1.28" (onboard) | Off the shelf plug-and-play solution with several 3d case designs |
+| **Waveshare ESP32-S3 Touch LCD 1.28"** | GC9A01A round 1.28" (onboard) + CST816S | Off the shelf plug-and-play solution with several 3d case designs |
+| **Seeed Studio XIAO Round Display with XIAO ESP32-C3** | GC9A01 round 1.28" (external) | Off the shelf plug-and-play solution with several 3d case designs |
 
-Both environments use the same codebase with conditional compilation (`include/config.h`).
+All environments use the same codebase with conditional compilation (`include/config.h`).
 
 ## Controls (BOOT pin, active LOW)
 
@@ -30,6 +31,7 @@ Both environments use the same codebase with conditional compilation (`include/c
 | ESP32-C3 Super Mini | GPIO 9 |
 | Waveshare ESP32-S3 | GPIO 0 |
 | Waveshare ESP32-S3-Touch | GPIO 0 |
+| Seeed Studio XIAO Round Display with XIAO ESP32-C3 | GPIO 9 |
 
 | Action | Effect |
 | -------- | -------- |

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [supermini, waveshare-s3, waveshare-s3-touch]
+        environment: [supermini, waveshare-s3, waveshare-s3-touch, seeed-xiao]
         include:
           - environment: supermini
             suffix: esp32c3-supermini
@@ -23,6 +23,8 @@ jobs:
             suffix: waveshare-s3
           - environment: waveshare-s3-touch
             suffix: waveshare-s3-touch
+          - environment: seeed-xiao
+            suffix: seeed-xiao
     steps:
       - name: Checkout
         uses: actions/checkout@v4

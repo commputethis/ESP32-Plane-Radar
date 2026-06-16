@@ -24,7 +24,9 @@ constexpr unsigned long kBootTapMinMs = 40UL;
 // --- Board pin profiles (selected via -DBOARD_* in platformio.ini) ---
 // Boards drive a GC9A01(A) 1.28" round 240×240 panel over SPI.
 #if defined(BOARD_WAVESHARE_S3)
+
     // Waveshare ESP32-S3 LCD 1.28" pinout
+    #pragma message("Using configuration for BOARD_WAVESHARE_S3")
     constexpr gpio_num_t kBootPin = GPIO_NUM_0;  // ESP32-S3 BOOT button, active LOW
     constexpr gpio_num_t kDisplayPinRst = GPIO_NUM_12;
     constexpr gpio_num_t kDisplayPinCs  = GPIO_NUM_9;
@@ -37,6 +39,7 @@ constexpr unsigned long kBootTapMinMs = 40UL;
 #elif defined(BOARD_S3_WAVESHARE_TOUCH128)
 
 // Waveshare ESP32-S3-Touch-LCD-1.28 (ESP32-S3R2)
+#pragma message("Using configuration for BOARD_ESP32_S3_TOUCH128")
 constexpr gpio_num_t kBootPin = GPIO_NUM_0;  // BOOT0 button, active LOW
 constexpr gpio_num_t kDisplayPinRst = GPIO_NUM_14;
 constexpr gpio_num_t kDisplayPinCs = GPIO_NUM_9;
@@ -56,8 +59,19 @@ constexpr uint8_t kTouchI2cAddr = 0x15;
 constexpr unsigned long kTouchTapDebounceMs = 250UL;
 #define DISPLAY_HAS_TOUCH 1
 
+#elif defined(BOARD_SEEED_XIAO)
+// --- Display: 1.28" round 240×240 XIAO Round Display from SeeedStudio ---
+#pragma message("Using configuration for BOARD_SEEED_XIAO")
+constexpr gpio_num_t kBootPin = GPIO_NUM_9; //ESP32-C3 BOOT button, active LOW
+constexpr gpio_num_t kDisplayPinRst = GPIO_NUM_NC;   // not exposed on xiao round display
+constexpr gpio_num_t kDisplayPinCs  = GPIO_NUM_3;    // D1/GPIO 3
+constexpr gpio_num_t kDisplayPinDc  = GPIO_NUM_5;    // D3/GPIO 5
+constexpr gpio_num_t kDisplayPinMosi = GPIO_NUM_10;  // XIAO SPI MOSI
+constexpr gpio_num_t kDisplayPinSclk = GPIO_NUM_8;   // XIAO SPI SCK
+
 #else // BOARD_C3_SUPERMINI (default)
 
+    #pragma message("Using configuration for BOARD_C3_SUPERMINI")
     // ESP32-C3 Super Mini pinout
     constexpr gpio_num_t kBootPin = GPIO_NUM_9;  // ESP32-C3 Super Mini, active LOW
     constexpr gpio_num_t kDisplayPinRst = GPIO_NUM_0;
