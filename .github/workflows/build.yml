@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        environment: [supermini, waveshare-s3]
+        environment: [supermini, waveshare-s3, waveshare-s3-touch, seeed_xiao]
     steps:
       - name: Checkout
         uses: actions/checkout@v5
